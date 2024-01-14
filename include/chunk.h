@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <glm/glm.hpp>
 
 #include <graphics/shader.h>
@@ -15,6 +17,7 @@ class Chunk {
         void build();
         void defineVoxelData();
         void render(const Shader &shaderProgram);
+        void build(const std::vector<Chunk*> &neighbors);
 
         GLuint getVAO() const;
 
@@ -29,4 +32,5 @@ class Chunk {
         glm::vec3 _position;
 
         bool isVoxelTransparent(int x, int y, int z);
+        bool isVoxelTransparent(int x, int y, int z, const std::vector<Chunk*> &neighbors);
 };

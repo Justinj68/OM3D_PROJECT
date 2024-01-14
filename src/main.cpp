@@ -83,41 +83,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 
-int createAndBindMesh(GLuint VAO) {
-    std::vector<GLfloat> vertices;
-    std::vector<GLuint> indices;
-
-    buildCube(-0.5, -0.5, -0.5, vertices, indices);
-
-    GLuint VBO, EBO;
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    glBindVertexArray(0);
-
-    return indices.size();
-}
-
-
 int main() {
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Meinkraft - 10000 FPS", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Meinkraft - 0 FPS", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -137,9 +109,11 @@ int main() {
     glfwGetWindowSize(window, &width, &height);
     Camera cam(height, width);
     cam.setPosition(glm::vec3(16.0, 33.0, 16.0));
+    cam.setSpeed(30.0);
 
     glfwSetWindowUserPointer(window, &cam);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     World world;
@@ -147,7 +121,9 @@ int main() {
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glFrontFace(GL_CW); 
+    glFrontFace(GL_CW);
+
+    glClearColor(0.4f, 0.4f, 0.8f, 1.0f);
 
     double lastFrameTime = glfwGetTime();
     double lastFPSTime = lastFrameTime;
@@ -170,7 +146,6 @@ int main() {
             std::string windowTitle = "Meinkraft - " + std::to_string(fps) + " FPS";
             glfwSetWindowTitle(window, windowTitle.c_str());
         }
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         processInput(window, cam, deltaTime);

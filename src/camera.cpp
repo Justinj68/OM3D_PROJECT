@@ -10,7 +10,7 @@ Camera::Camera() {
     _zoom = 45.0f;
     _aspectRatio = 4.0 / 3.0f;
     _nearPlane = 0.1f;
-    _farPlane = 1000.0f;
+    _farPlane = 10000.0f;
 
     updateCameraVectors();
 }
@@ -24,7 +24,7 @@ Camera::Camera(unsigned windowHeight, unsigned windowWidth) {
     _zoom = 45.0f;
     _aspectRatio = static_cast<float>(windowWidth) / windowHeight;
     _nearPlane = 0.1f;
-    _farPlane = 1000.0f;
+    _farPlane = 10000.0f;
 
     updateCameraVectors();
 }
@@ -39,7 +39,7 @@ Camera::Camera(glm::vec3 position, unsigned windowHeight, unsigned windowWidth) 
     _zoom = 45.0f;
     _aspectRatio = windowWidth / windowHeight;
     _nearPlane = 0.1f;
-    _farPlane = 1000.0f;
+    _farPlane = 10000.0f;
 
     updateCameraVectors();
 }
@@ -54,7 +54,7 @@ Camera::Camera(glm::vec3 position, float yaw, float pitch, float speed, float se
     _zoom = zoom;
     _aspectRatio = 4.0 / 3.0f;
     _nearPlane = 0.1f;
-    _farPlane = 1000.0f;
+    _farPlane = 10000.0f;
 
     updateCameraVectors();
 }
@@ -69,7 +69,7 @@ Camera::Camera(glm::vec3 position, float yaw, float pitch, float speed, float se
     _zoom = zoom;
     _aspectRatio = windowWidth / windowHeight;
     _nearPlane = 0.1f;
-    _farPlane = 1000.0f;
+    _farPlane = 10000.0f;
 
     updateCameraVectors();
 }
