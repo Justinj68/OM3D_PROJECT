@@ -13,6 +13,7 @@
 #include <graphics/texture.h>
 
 #include <chunk.h>
+#include <world.h>
 
 #define WINDOW_HEIGHT 900
 #define WINDOW_WITDTH 1440
@@ -141,9 +142,8 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    Chunk chunk;
-    chunk.defineVoxelData();
-    chunk.build();
+    World world;
+    world.build();
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -178,7 +178,7 @@ int main() {
         shaderProgram.use();
         shaderProgram.setMat4("view", cam.getViewMatrix());
         shaderProgram.setMat4("projection", cam.getProjectionMatrix());
-        chunk.render();
+        world.render(shaderProgram);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

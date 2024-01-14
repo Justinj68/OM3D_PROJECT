@@ -7,10 +7,12 @@ Chunk::Chunk() {
     _voxels = new Voxel::Type[CHUNK_DIM * CHUNK_DIM * CHUNK_DIM];
 }
 
+
 Chunk::Chunk(const glm::vec3 &position) {
     _position = position;
     _voxels = new Voxel::Type[CHUNK_DIM * CHUNK_DIM * CHUNK_DIM];
 }
+
 
 void Chunk::defineVoxelData() {
     for (int x = 0; x < CHUNK_DIM; ++x) {
@@ -22,15 +24,18 @@ void Chunk::defineVoxelData() {
     }
 }
 
+
 GLuint Chunk::getVAO() const {
     return _VAO;
 }
+
 
 bool Chunk::isVoxelTransparent(int x, int y, int z) {
     if (x < 0 || x >= CHUNK_DIM || y < 0 || y >= CHUNK_DIM || z < 0 || z >= CHUNK_DIM)
         return true;
     return Voxel::isTransparent(_voxels[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]);
 }
+
 
 void Chunk::build() {
     std::vector<GLfloat> vertices;
@@ -55,7 +60,6 @@ void Chunk::build() {
         }
     }
     _indicesCount = indices.size();
-    std::cout << _indicesCount << std::endl;
 
     GLuint VBO, EBO;
     glGenVertexArrays(1, &_VAO);
@@ -77,12 +81,26 @@ void Chunk::build() {
     glBindVertexArray(0);
 }
 
-void Chunk::render() {
+
+void Chunk::render(const Shader &shaderProgram) {
     if (_indicesCount == 0)
         return;
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), _position * (float)CHUNK_DIM);
+    shaderProgram.setMat4("model", model);
     glBindVertexArray(_VAO);
     glDrawElements(GL_TRIANGLES, _indicesCount, GL_UNSIGNED_INT, (void*)0);
 }
+
+
+void Chunk::setPosition(int x, int y, int z) {
+    _position = glm::vec3(x, y, z);
+}
+
+
+void Chunk::setPosition(const glm::vec3 &position) {
+    _position = position;
+}
+
 
 Chunk::~Chunk() {
     delete[] _voxels;

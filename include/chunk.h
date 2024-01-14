@@ -14,9 +14,12 @@ class Chunk {
 
         void build();
         void defineVoxelData();
-        void render();
+        void render(const Shader &shaderProgram);
 
         GLuint getVAO() const;
+
+        void setPosition(int x, int y, int z);
+        void setPosition(const glm::vec3 &position);
 
         ~Chunk();
     private:
