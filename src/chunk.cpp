@@ -1,6 +1,6 @@
 #include <chunk.h>
 
-#include <cube_mesh.h>
+#include <math.h>
 
 Chunk::Chunk() {
     _position = glm::vec3(0.0);
@@ -18,7 +18,10 @@ void Chunk::defineVoxelData() {
     for (int x = 0; x < CHUNK_DIM; ++x) {
         for (int y = 0; y < CHUNK_DIM; ++y) {
             for (int z = 0; z < CHUNK_DIM; z++) {
-                _voxels[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] = Voxel::STONE;
+                float xPos = _position.x * CHUNK_DIM + x;
+                float zPos = _position.z * CHUNK_DIM + z;
+                int height = (int) ((sin(xPos * zPos) + 1.0) / 2.0 * CHUNK_DIM);
+                _voxels[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] = y > height ? Voxel::AIR : Voxel::STONE;
             }
         }
     }
@@ -48,7 +51,9 @@ bool Chunk::isVoxelTransparent(int x, int y, int z, const std::vector<Chunk*> &n
 
     // Back, Front, Left, Right, Bottom, Top
     char chunkID = 0;
-    if (x < 0)
+    if (z < 0)
+        chunkID = 1;
+    else if (x < 0)
         chunkID = 2;
     else if (x >= CHUNK_DIM)
         chunkID = 3;
@@ -56,8 +61,6 @@ bool Chunk::isVoxelTransparent(int x, int y, int z, const std::vector<Chunk*> &n
         chunkID = 4;
     else if (y >= CHUNK_DIM)
         chunkID = 5;
-    else if (z < 0)
-        chunkID = 1;
     
     Chunk* chunk = neighbors.at(chunkID);
     if (chunk == nullptr)
@@ -71,13 +74,38 @@ bool Chunk::isVoxelTransparent(int x, int y, int z, const std::vector<Chunk*> &n
 }
 
 
-void Chunk::build() {
-    std::vector<GLfloat> vertices;
-    std::vector<GLuint> indices;
+void Chunk::manageBuffers(std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
+    GLuint VBO, EBO;
+    glGenVertexArrays(1, &_VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
+    glBindVertexArray(_VAO);
+
+    // Envoi des vertex data (emballés dans PackedVertex)
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(PackedVertex), vertices.data(), GL_STATIC_DRAW);
+
+    // Envoi des index data
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(PackedVertex), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindVertexArray(0);
+}
+
+
+void Chunk::build() {
+    std::vector<PackedVertex> vertices;
+    std::vector<GLuint> indices;
     for (int x = 0; x < CHUNK_DIM; ++x) {
         for (int y = 0; y < CHUNK_DIM; ++y) {
             for (int z = 0; z < CHUNK_DIM; z++) {
+                if (isVoxelTransparent(x, y, z))
+                    continue;
                 if (isVoxelTransparent(x, y - 1, z))
                     addBottomFace(x, y, z, vertices, indices);
                 if (isVoxelTransparent(x, y + 1, z))
@@ -94,35 +122,18 @@ void Chunk::build() {
         }
     }
     _indicesCount = indices.size();
-
-    GLuint VBO, EBO;
-    glGenVertexArrays(1, &_VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(_VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    glBindVertexArray(0);
+    manageBuffers(vertices, indices);
 }
 
 
 void Chunk::build(const std::vector<Chunk*> &neighbors) {
-    std::vector<GLfloat> vertices;
+    std::vector<PackedVertex> vertices;
     std::vector<GLuint> indices;
-
     for (int x = 0; x < CHUNK_DIM; ++x) {
         for (int y = 0; y < CHUNK_DIM; ++y) {
             for (int z = 0; z < CHUNK_DIM; z++) {
+                if (isVoxelTransparent(x, y, z))
+                    continue;
                 if (isVoxelTransparent(x, y - 1, z, neighbors))
                     addBottomFace(x, y, z, vertices, indices);
                 if (isVoxelTransparent(x, y + 1, z, neighbors))
@@ -139,25 +150,7 @@ void Chunk::build(const std::vector<Chunk*> &neighbors) {
         }
     }
     _indicesCount = indices.size();
-
-    GLuint VBO, EBO;
-    glGenVertexArrays(1, &_VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(_VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    glBindVertexArray(0);
+    manageBuffers(vertices, indices);
 }
 
 

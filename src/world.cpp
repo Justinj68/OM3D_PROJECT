@@ -30,7 +30,6 @@ void World::build() {
     }
     std::cout << "Voxel data defined" << std::endl << "Building meshes";
     for (int x = 0; x < WORLD_WIDTH; ++x) {
-        std::cout << ".";
         for (int y = 0; y < WORLD_HEIGHT; ++y) {
             for (int z = 0; z < WORLD_WIDTH; ++z) {
                 Chunk& chunk = _chunks[x * WORLD_WIDTH * WORLD_HEIGHT + y * WORLD_WIDTH + z];

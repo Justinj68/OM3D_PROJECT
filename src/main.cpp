@@ -102,6 +102,8 @@ int main() {
         return -1;
     }
 
+    glEnable(GL_DEPTH_TEST);
+
     // Build and compile our shader program
     Shader shaderProgram("C:\\Users\\justi\\Desktop\\Meinkraft2\\OM3D_PROJECT\\shaders\\mesh.vtx.glsl", "C:\\Users\\justi\\Desktop\\Meinkraft2\\OM3D_PROJECT\\shaders\\mesh.frg.glsl");
 
@@ -118,6 +120,9 @@ int main() {
 
     World world;
     world.build();
+
+    Texture texture("C:\\Users\\justi\\Desktop\\Meinkraft2\\OM3D_PROJECT\\textures\\atlas.png");
+    texture.bind();
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -146,7 +151,7 @@ int main() {
             std::string windowTitle = "Meinkraft - " + std::to_string(fps) + " FPS";
             glfwSetWindowTitle(window, windowTitle.c_str());
         }
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         processInput(window, cam, deltaTime);
 
