@@ -1,7 +1,7 @@
 #pragma once
 
 namespace Voxel {
-    enum Type {
+    enum Type : unsigned short {
         AIR,
         STONE,
         DIRT,

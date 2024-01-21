@@ -17,8 +17,8 @@ Camera::Camera() {
 
 Camera::Camera(unsigned windowHeight, unsigned windowWidth) {
     _position = glm::vec3(0.0f);
-    _yaw = 90.0f; 
-    _pitch = 0.0f;
+    _yaw = 0.0f; 
+    _pitch = 180.0f;
     _speed = 5.0f;
     _sensitivity = 1.0f;
     _zoom = 45.0f;
@@ -89,8 +89,8 @@ glm::mat4 Camera::getFrustrumMatrix() const {
 }
 
 
-glm::vec3 Camera::getPosition() const {
-    return _position;
+glm::vec3* Camera::getPosition() {
+    return &_position;
 }
 
 

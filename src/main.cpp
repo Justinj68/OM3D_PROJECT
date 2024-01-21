@@ -24,7 +24,12 @@ bool firstMouse = true;
 bool xKeyPressed = false;
 bool wireframeMode = false;
 
+bool compareVec3(const glm::vec3 &v1, const glm::vec3 &v2) {
+    return (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z);
+}
+
 void processInput(GLFWwindow* window, Camera& cam, float deltaTime) {
+    // const glm::vec3 &firstCamPos = *(cam.getPosition());
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cam.moveForward(deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -37,6 +42,10 @@ void processInput(GLFWwindow* window, Camera& cam, float deltaTime) {
         cam.moveDown(deltaTime);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         cam.moveUp(deltaTime);
+    const glm::vec3 &secondCamPos = *(cam.getPosition());
+    // if (!(compareVec3(firstCamPos, secondCamPos)))
+    std::cout << "Position: (" << secondCamPos.x << ", " << secondCamPos.y << ", " << secondCamPos.z << ")" << std::endl;
+    
 
     bool xKeyDown = glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS;
 	if (xKeyDown && !xKeyPressed) {
@@ -83,7 +92,11 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 
-int main() {
+int main(int argc, char **argv) {
+    BuildMode buildMode = GREEDY;
+    if (argc >= 2 && strcmp(argv[1], "CLASSIC") == 0)
+        buildMode = CLASSIC;
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -110,16 +123,16 @@ int main() {
     int height, width;
     glfwGetWindowSize(window, &width, &height);
     Camera cam(height, width);
-    cam.setPosition(glm::vec3(16.0, 33.0, 16.0));
-    cam.setSpeed(30.0);
+    cam.setPosition(glm::vec3(-291.036, 158.901, -318.241));
+    cam.setSpeed(50.0);
 
     glfwSetWindowUserPointer(window, &cam);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    World world;
-    world.build();
+    World world(cam.getPosition());
+    world.build(buildMode);
 
     Texture texture("C:\\Users\\justi\\Desktop\\Meinkraft2\\OM3D_PROJECT\\textures\\atlas.png");
     texture.bind();

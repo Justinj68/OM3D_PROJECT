@@ -4,7 +4,17 @@
 
 #include <glad/glad.h>
 
-enum NormalIndex {
+enum FaceDirection : unsigned char {
+    FRONT,
+    BACK,
+    LEFT,
+    RIGHT,
+    TOP,
+    BOTTOM
+};
+
+
+enum NormalIndex : unsigned char {
     NORMAL_FRONT = 0,
     NORMAL_TOP = 1,
     NORMAL_RIGHT = 2,
@@ -30,8 +40,18 @@ struct PackedVertex {
     }
 };
 
+// Greedy meshing
+void addBackFace(GLfloat z, GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+void addFrontFace(GLfloat z, GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
 
-// Packed data
+void addLeftFace(GLfloat x, GLfloat y1, GLfloat z1, GLfloat y2, GLfloat z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+void addRightFace(GLfloat x, GLfloat y1, GLfloat z1, GLfloat y2, GLfloat z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+
+void addTopFace(GLfloat y, GLfloat x1, GLfloat z1, GLfloat x2, GLfloat z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+void addBottomFace(GLfloat y, GLfloat x1, GLfloat z1, GLfloat x2, GLfloat z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+
+
+// Classic meshing
 void addBackFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
 void addFrontFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
 
@@ -40,18 +60,3 @@ void addRightFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& ve
 
 void addTopFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
 void addBottomFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
-
-void buildCube(float x, float y, float z, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
-
-
-// Non-packed data
-void addBackFace(GLfloat x, GLfloat y, GLfloat z, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices);
-void addFrontFace(GLfloat x, GLfloat y, GLfloat z, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices);
-
-void addLeftFace(GLfloat x, GLfloat y, GLfloat z, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices);
-void addRightFace(GLfloat x, GLfloat y, GLfloat z, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices);
-
-void addTopFace(GLfloat x, GLfloat y, GLfloat z, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices);
-void addBottomFace(GLfloat x, GLfloat y, GLfloat z, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices);
-
-void buildCube(float x, float y, float z, std::vector<GLfloat> &vertices, std::vector<GLuint> &indices);
