@@ -55,11 +55,11 @@ std::vector<Chunk*> World::getNeighboringChunks(int x, int y, int z) {
 }
 
 void printTimeStats(double seconds_count, int nbChunks, const std::string& stage) {
-    float secondsPerChunk = seconds_count / nbChunks;
-    int avgMinutes = secondsPerChunk / 60;
-    float avgSeconds = secondsPerChunk - (avgMinutes * 60);
-    int minutes = seconds_count / 60;
-    float seconds = seconds_count - (minutes * 60);
+    double secondsPerChunk = seconds_count / nbChunks;
+    int avgMinutes = (int)(secondsPerChunk / 60.0);
+    double avgSeconds = secondsPerChunk - (avgMinutes * 60);
+    int minutes = (int)(seconds_count / 60.0);
+    double seconds = seconds_count - (minutes * 60);
 
     std::cout << stage << " completed: " << std::endl
               << "\tTotal time: " << minutes << "m " << seconds << "s" << std::endl
@@ -72,7 +72,7 @@ void World::build(BuildMode mode) {
     std::cout << "Defining chunks data..." << std::endl;
     auto startTime = std::chrono::system_clock::now();
 
-    TerrainGenerator terrainGenerator(123456789, 0.01, 60, 300);
+    TerrainGenerator terrainGenerator(123456789, 0.01f, 60, 300);
     for (int x = 0; x < WORLD_WIDTH; ++x) {
         for (int y = 0; y < WORLD_HEIGHT; ++y) {
             for (int z = 0; z < WORLD_WIDTH; ++z) {
@@ -86,7 +86,7 @@ void World::build(BuildMode mode) {
 
     auto endTime = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = endTime - startTime;
-    float seconds_count = elapsed_seconds.count();
+    double seconds_count = elapsed_seconds.count();
 
     printTimeStats(seconds_count, nbChunks, "Voxel data definition");
 
@@ -99,7 +99,7 @@ void World::build(BuildMode mode) {
                 if (mode == CLASSIC)
                     chunk->build(getNeighboringChunks(x, y, z));
                 else
-                    chunk->greedyBuild(getNeighboringChunks(x, y, z));
+                    chunk->greedyBuild(getNeighboringChunks(x, y, z), &facesCount);
             }
         }
     }

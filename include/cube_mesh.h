@@ -4,23 +4,47 @@
 
 #include <glad/glad.h>
 
-enum FaceDirection : unsigned char {
-    FRONT,
-    BACK,
-    LEFT,
-    RIGHT,
-    TOP,
-    BOTTOM
+/**
+ *  Representation of the orthonormal coordinate system in 3D
+ *
+ *             y
+ *             |
+ *             |
+ *             |_____ x
+ *              \
+ *               \
+ *                z
+ *  
+ *  Axes:
+ *  - X-axis (x) : from left to right.
+ *  - Y-axis (y) : from bottom to top.
+ *  - Z-axis (z) : from back to front.
+ */
+
+
+enum Direction : unsigned char {
+    ZPOS = 0, // Front
+    YPOS = 1, // Top
+    XPOS = 2, // Right
+    ZNEG = 3, // Back
+    YNEG = 4, // Bottom
+    XNEG = 5, // Left
 };
 
+enum DirectionMask : unsigned char {
+    MASK_ZPOS = 0b00000001, //  1
+    MASK_YPOS = 0b00000010, //  2
+    MASK_XPOS = 0b00000100, //  4
+    MASK_ZNEG = 0b00001000, //  8
+    MASK_YNEG = 0b00010000, // 16
+    MASK_XNEG = 0b00100000, // 32
+};
 
-enum NormalIndex : unsigned char {
-    NORMAL_FRONT = 0,
-    NORMAL_TOP = 1,
-    NORMAL_RIGHT = 2,
-    NORMAL_BACK = 3,
-    NORMAL_BOTTOM = 4,
-    NORMAL_LEFT = 5
+enum UVIndex : unsigned char {
+    BLC = 0, // Bottom   Left    corner
+    TLC = 1, // Top      Left    corner
+    TRC = 2, // Top      Right   corner
+    BRC = 3, // Bottom   Right   corner
 };
 
 
@@ -40,23 +64,24 @@ struct PackedVertex {
     }
 };
 
+
 // Greedy meshing
-void addBackFace(GLfloat z, GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
-void addFrontFace(GLfloat z, GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+void addLeftFace(char x, char y1, char z1, char y2, char z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+void addRightFace(char x, char y1, char z1, char y2, char z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
 
-void addLeftFace(GLfloat x, GLfloat y1, GLfloat z1, GLfloat y2, GLfloat z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
-void addRightFace(GLfloat x, GLfloat y1, GLfloat z1, GLfloat y2, GLfloat z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+void addBottomFace(char y, char x1, char z1, char x2, char z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+void addTopFace(char y, char x1, char z1, char x2, char z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
 
-void addTopFace(GLfloat y, GLfloat x1, GLfloat z1, GLfloat x2, GLfloat z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
-void addBottomFace(GLfloat y, GLfloat x1, GLfloat z1, GLfloat x2, GLfloat z2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+void addBackFace(char z, char x1, char y1, char x2, char y2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
+void addFrontFace(char z, char x1, char y1, char x2, char y2, std::vector<PackedVertex>& vertices, std::vector<GLuint> &indices);
 
 
 // Classic meshing
-void addBackFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
-void addFrontFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
+void addBackFace(char x, char y, char z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
+void addFrontFace(char x, char y, char z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
 
-void addLeftFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
-void addRightFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
+void addLeftFace(char x, char y, char z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
+void addRightFace(char x, char y, char z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
 
-void addTopFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
-void addBottomFace(GLfloat x, GLfloat y, GLfloat z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
+void addTopFace(char x, char y, char z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);
+void addBottomFace(char x, char y, char z, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices);

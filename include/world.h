@@ -23,6 +23,8 @@ class World {
         void render(const Shader &shaderProgram);
 
         Chunk* getChunk(int x, int y, int z);
+        
+        int facesCount = 0;
     private:
         glm::vec3* _playerPosition;
         Chunk** _chunks;

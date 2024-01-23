@@ -18,8 +18,8 @@
 #define WINDOW_HEIGHT 900
 #define WINDOW_WITDTH 1440
 
-float lastX = WINDOW_WITDTH / 2.0f;
-float lastY = WINDOW_HEIGHT / 2.0f;
+double lastX = WINDOW_WITDTH / 2.0;
+double lastY = WINDOW_HEIGHT / 2.0;
 bool firstMouse = true;
 bool xKeyPressed = false;
 bool wireframeMode = false;
@@ -44,7 +44,7 @@ void processInput(GLFWwindow* window, Camera& cam, float deltaTime) {
         cam.moveUp(deltaTime);
     const glm::vec3 &secondCamPos = *(cam.getPosition());
     // if (!(compareVec3(firstCamPos, secondCamPos)))
-    std::cout << "Position: (" << secondCamPos.x << ", " << secondCamPos.y << ", " << secondCamPos.z << ")" << std::endl;
+    // std::cout << "Position: (" << secondCamPos.x << ", " << secondCamPos.y << ", " << secondCamPos.z << ")" << std::endl;
     
 
     bool xKeyDown = glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS;
@@ -78,8 +78,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
         firstMouse = false;
     }
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // Inversé puisque y-coordonnées vont de bas en haut
+    float xoffset = (float)(xpos - lastX);
+    float yoffset = (float)(lastY - ypos); // Inversé puisque y-coordonnées vont de bas en haut
     lastX = xpos;
     lastY = ypos;
 
@@ -118,12 +118,12 @@ int main(int argc, char **argv) {
     glEnable(GL_DEPTH_TEST);
 
     // Build and compile our shader program
-    Shader shaderProgram("C:\\Users\\justi\\Desktop\\Meinkraft2\\OM3D_PROJECT\\shaders\\mesh.vtx.glsl", "C:\\Users\\justi\\Desktop\\Meinkraft2\\OM3D_PROJECT\\shaders\\mesh.frg.glsl");
+    Shader shaderProgram("..\\..\\shaders\\mesh.vtx.glsl", "..\\..\\shaders\\mesh.frg.glsl");
 
     int height, width;
     glfwGetWindowSize(window, &width, &height);
     Camera cam(height, width);
-    cam.setPosition(glm::vec3(-291.036, 158.901, -318.241));
+    cam.setPosition(glm::vec3(0, 320, 0));
     cam.setSpeed(50.0);
 
     glfwSetWindowUserPointer(window, &cam);
@@ -133,13 +133,14 @@ int main(int argc, char **argv) {
 
     World world(cam.getPosition());
     world.build(buildMode);
+    std::cout << "Faces count: " << world.facesCount << std::endl;
 
-    Texture texture("C:\\Users\\justi\\Desktop\\Meinkraft2\\OM3D_PROJECT\\textures\\atlas.png");
+    Texture texture("..\\..\\textures\\atlas.png");
     texture.bind();
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
+    // glFrontFace(GL_CW);
 
     glClearColor(0.4f, 0.4f, 0.8f, 1.0f);
 
@@ -166,7 +167,7 @@ int main(int argc, char **argv) {
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        processInput(window, cam, deltaTime);
+        processInput(window, cam, (float)deltaTime);
 
         shaderProgram.use();
         shaderProgram.setMat4("view", cam.getViewMatrix());

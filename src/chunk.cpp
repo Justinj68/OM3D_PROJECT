@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-long long mod(long long k, long long n);
+char mod(char k, char n);
 
 // Constructors and Destructor
 Chunk::Chunk() {
@@ -22,73 +22,43 @@ Chunk::~Chunk() {
 }
 
 
-bool Chunk::isFaceVisible(int x, int y, int z, FaceDirection direction) {
+bool Chunk::isFaceVisible(char x, char y, char z, Direction direction) {
     if (isVoxelTransparent(x, y, z))
         return false;
-    switch (direction)
-    {
-        case FRONT:
-            return isVoxelTransparent(x, y, z - 1);
-            break;
-
-        case BACK:
-            return isVoxelTransparent(x, y, z + 1);
-            break;
-
-        case LEFT:
+    switch (direction) {
+        case Direction::XNEG:
             return isVoxelTransparent(x - 1, y, z);
-            break;
-
-        case RIGHT:
+        case Direction::XPOS:
             return isVoxelTransparent(x + 1, y, z);
-            break;
-
-        case TOP:
-            return isVoxelTransparent(x, y + 1, z);
-            break;
-
-        case BOTTOM:
+        case Direction::YNEG:
             return isVoxelTransparent(x, y - 1, z);
-            break;
-        
-        default:
-            break;
+        case Direction::YPOS:
+            return isVoxelTransparent(x, y + 1, z);
+        case Direction::ZNEG:
+            return isVoxelTransparent(x, y, z + 1);
+        case Direction::ZPOS:
+            return isVoxelTransparent(x, y, z - 1);
     }
     return true;
 }
 
 
-bool Chunk::isFaceVisible(int x, int y, int z, FaceDirection direction, const std::vector<Chunk*> &neighbors) {
+bool Chunk::isFaceVisible(char x, char y, char z, Direction direction, const std::vector<Chunk*> &neighbors) {
     if (isVoxelTransparent(x, y, z))
         return false;
-    switch (direction)
-    {
-        case FRONT:
-            return isVoxelTransparent(x, y, z - 1, neighbors);
-            break;
-
-        case BACK:
-            return isVoxelTransparent(x, y, z + 1, neighbors);
-            break;
-
-        case LEFT:
+    switch (direction) {
+        case Direction::XNEG:
             return isVoxelTransparent(x - 1, y, z, neighbors);
-            break;
-
-        case RIGHT:
+        case Direction::XPOS:
             return isVoxelTransparent(x + 1, y, z, neighbors);
-            break;
-
-        case TOP:
-            return isVoxelTransparent(x, y + 1, z, neighbors);
-            break;
-
-        case BOTTOM:
+        case Direction::YNEG:
             return isVoxelTransparent(x, y - 1, z, neighbors);
-            break;
-        
-        default:
-            break;
+        case Direction::YPOS:
+            return isVoxelTransparent(x, y + 1, z, neighbors);
+        case Direction::ZNEG:
+            return isVoxelTransparent(x, y, z + 1, neighbors);
+        case Direction::ZPOS:
+            return isVoxelTransparent(x, y, z - 1, neighbors);
     }
     return true;
 }
@@ -108,9 +78,9 @@ void Chunk::deleteBuffers() {
 }
 
 void Chunk::defineVoxelData(TerrainGenerator &terrainGenerator) {
-    for (int x = 0; x < CHUNK_DIM; ++x) {
-        for (int y = 0; y < CHUNK_DIM; ++y) {
-            for (int z = 0; z < CHUNK_DIM; z++) {
+    for (char x = 0; x < CHUNK_DIM; ++x) {
+        for (char y = 0; y < CHUNK_DIM; ++y) {
+            for (char z = 0; z < CHUNK_DIM; z++) {
                 float xPos = _position.x * CHUNK_DIM + x;
                 float yPos = _position.y * CHUNK_DIM + y;
                 float zPos = _position.z * CHUNK_DIM + z;
@@ -129,9 +99,9 @@ void Chunk::defineVoxelData(TerrainGenerator &terrainGenerator) {
 void Chunk::defineCave(TerrainGenerator &terrainGenerator) {
     if (_empty)
         return;
-    for (int x = 0; x < CHUNK_DIM; ++x) {
-        for (int y = 0; y < CHUNK_DIM; ++y) {
-            for (int z = 0; z < CHUNK_DIM; z++) {
+    for (char x = 0; x < CHUNK_DIM; ++x) {
+        for (char y = 0; y < CHUNK_DIM; ++y) {
+            for (char z = 0; z < CHUNK_DIM; z++) {
                 float xPos = _position.x * CHUNK_DIM + x;
                 float yPos = _position.y * CHUNK_DIM + y;
                 float zPos = _position.z * CHUNK_DIM + z;
@@ -158,9 +128,9 @@ void Chunk::build(const std::vector<Chunk*> &neighbors) {
     }
     std::vector<PackedVertex> vertices;
     std::vector<GLuint> indices;
-    for (int x = 0; x < CHUNK_DIM; ++x) {
-        for (int y = 0; y < CHUNK_DIM; ++y) {
-            for (int z = 0; z < CHUNK_DIM; z++) {
+    for (char x = 0; x < CHUNK_DIM; ++x) {
+        for (char y = 0; y < CHUNK_DIM; ++y) {
+            for (char z = 0; z < CHUNK_DIM; z++) {
                 if (isVoxelTransparent(x, y, z))
                     continue;
                 if (isVoxelTransparent(x, y - 1, z, neighbors))
@@ -183,21 +153,21 @@ void Chunk::build(const std::vector<Chunk*> &neighbors) {
 }
 
 // WORKS
-void Chunk::processFaceXPositive(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
-    char filter = 0b00001000;
-    if ((mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, RIGHT, neighbors))
+void Chunk::processFaceXPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
+    char filter = DirectionMask::MASK_XPOS;
+    if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, Direction::XPOS, neighbors))
         return;
     
-    int depth = 1;
-    int height = 1;
+    char depth = 1;
+    char height = 1;
 
-    while (z + depth < CHUNK_DIM && isFaceVisible(x, y, z + depth, RIGHT, neighbors) && !mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth])
+    while (z + depth < CHUNK_DIM && isFaceVisible(x, y, z + depth, Direction::XPOS, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth])
         depth++;
 
-    while (y + height < CHUNK_DIM && isFaceVisible(x, y + height, z, RIGHT, neighbors)) {
+    while (y + height < CHUNK_DIM && isFaceVisible(x, y + height, z, Direction::XPOS, neighbors)) {
         bool addRow = true;
-        for (int k = 0; k < depth; k++) {
-            if (!isFaceVisible(x, y + height, z + k, RIGHT, neighbors)) {
+        for (char k = 0; k < depth; k++) {
+            if (!isFaceVisible(x, y + height, z + k, Direction::XPOS, neighbors)) {
                 addRow = false;
                 break;
             }
@@ -209,29 +179,29 @@ void Chunk::processFaceXPositive(int x, int y, int z, char mask[], const std::ve
 
     addRightFace(x, y, z, y + height, z + depth, vertices, indices);
 
-    for (int dz = 0; dz < depth; dz++) {
-        for (int dy = 0; dy < height; dy++) {
-            mask[x * CHUNK_DIM * CHUNK_DIM + (y + dy) * CHUNK_DIM + z + dz] |= filter;
+    for (char dz = 0; dz < depth; dz++) {
+        for (char dy = 0; dy < height; dy++) {
+            processed[x * CHUNK_DIM * CHUNK_DIM + (y + dy) * CHUNK_DIM + z + dz] |= filter;
         }
     }
 }
 
 // WORKS
-void Chunk::processFaceXNegative(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
-    char filter = 0b00000100;
-    if ((mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, LEFT, neighbors))
+void Chunk::processFaceXNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
+    char filter = DirectionMask::MASK_XNEG;
+    if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, Direction::XNEG, neighbors))
         return;
     
-    int depth = 1;
-    int height = 1;
+    char depth = 1;
+    char height = 1;
 
-    while (z + depth < CHUNK_DIM && isFaceVisible(x, y, z + depth, LEFT, neighbors) && !mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth])
+    while (z + depth < CHUNK_DIM && isFaceVisible(x, y, z + depth, Direction::XNEG, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth])
         depth++;
 
-    while (y + height < CHUNK_DIM && isFaceVisible(x, y + height, z, LEFT, neighbors)) {
+    while (y + height < CHUNK_DIM && isFaceVisible(x, y + height, z, Direction::XNEG, neighbors)) {
         bool addRow = true;
-        for (int k = 0; k < depth; k++) {
-            if (!isFaceVisible(x, y + height, z + k, LEFT, neighbors)) {
+        for (char k = 0; k < depth; k++) {
+            if (!isFaceVisible(x, y + height, z + k, Direction::XNEG, neighbors)) {
                 addRow = false;
                 break;
             }
@@ -243,172 +213,272 @@ void Chunk::processFaceXNegative(int x, int y, int z, char mask[], const std::ve
 
     addLeftFace(x, y, z, y + height, z + depth, vertices, indices);
 
-    for (int dz = 0; dz < depth; dz++) {
-        for (int dy = 0; dy < height; dy++) {
-            mask[x * CHUNK_DIM * CHUNK_DIM + (y + dy) * CHUNK_DIM + z + dz] |= filter;
+    for (char dz = 0; dz < depth; dz++) {
+        for (char dy = 0; dy < height; dy++) {
+            processed[x * CHUNK_DIM * CHUNK_DIM + (y + dy) * CHUNK_DIM + z + dz] |= filter;
         }
     }
 }
-void Chunk::processFaceYPositive(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
-    char filter = 0b00100000;
-    if ((mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, TOP, neighbors))
+
+
+void Chunk::processFaceYPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
+    DirectionMask mask = DirectionMask::MASK_YPOS;
+    Direction direction = Direction::YPOS;
+    if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & mask) || !isFaceVisible(x, y, z, direction, neighbors))
         return;
     
-    int width = 1;
-    int depth = 1;
+    char width1 = 1, width2 = 1, width = 1;
+    char depth1 = 1, depth2 = 1, depth = 1;
 
-    while (x + width < CHUNK_DIM && isFaceVisible(x + width, y, z, TOP, neighbors) && !mask[(x + width) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z])
-        width++;
+    while (x + width1 < CHUNK_DIM && isFaceVisible(x + width1, y, z, direction, neighbors) && !processed[(x + width1) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z])
+        width1++;
 
-    while (z + depth < CHUNK_DIM && isFaceVisible(x, y, z + depth, TOP, neighbors) && !mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth]) {
+    while (z + depth1 < CHUNK_DIM && isFaceVisible(x, y, z + depth1, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth1]) {
         bool addRow = true;
-        for (int k = 0; k < width; k++) {
-            if (!isFaceVisible(x + k, y, z + depth, BOTTOM, neighbors)) {
+        for (int k = 0; k < width1; k++) {
+            if (!isFaceVisible(x + k, y, z + depth1, direction, neighbors)) {
                 addRow = false;
                 break;
             }
         }
         if (!addRow)
             break;
-        depth++;
+        depth1++;
     }
 
+    // while (z + depth2 < CHUNK_DIM && isFaceVisible(x, y, z + depth2, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth2])
+    //     depth2++;
+
+    // while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
+    //     bool addRow = true;
+    //     for (int k = 0; k < depth2; k++) {
+    //         if (!isFaceVisible(x + width2, y, z + k, direction, neighbors)) {
+    //             addRow = false;
+    //             break;
+    //         }
+    //     }
+    //     if (!addRow)
+    //         break;
+    //     width2++;
+    // }
+
+    // if (width1 * depth1 >= width2 * depth2)
+    //     width = width1, depth = depth1;
+    // else
+    //     width = width2, depth = depth2;
+
+    width = width1;
+    depth = depth1;
     addTopFace(y, x, z, x + width, z + depth, vertices, indices);
 
-    for (int dx = 0; dx < width; dx++) {
-        for (int dz = 0; dz < depth; dz++) {
-            mask[(x + dx) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + dz] |= filter;
+    for (char dx = 0; dx < width; dx++) {
+        for (char dz = 0; dz < depth; dz++) {
+            processed[(x + dx) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + dz] |= mask;
         }
     }
 }
-void Chunk::processFaceYNegative(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
-    char filter = 0b00010000;
-    if ((mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, BOTTOM, neighbors))
+void Chunk::processFaceYNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
+    DirectionMask mask = DirectionMask::MASK_YNEG;
+    Direction direction = Direction::YNEG;
+    if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & mask) || !isFaceVisible(x, y, z, direction, neighbors))
         return;
     
-    int width = 1;
-    int depth = 1;
+    char width1 = 1, width2 = 1, width = 1;
+    char depth1 = 1, depth2 = 1, depth = 1;
 
-    while (x + width < CHUNK_DIM && isFaceVisible(x + width, y, z, BOTTOM, neighbors) && !mask[(x + width) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z])
-        width++;
+    while (x + width1 < CHUNK_DIM && isFaceVisible(x + width1, y, z, direction, neighbors) && !processed[(x + width1) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z])
+        width1++;
 
-    while (z + depth < CHUNK_DIM && isFaceVisible(x, y, z + depth, BOTTOM, neighbors) && !mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth]) {
+    while (z + depth1 < CHUNK_DIM && isFaceVisible(x, y, z + depth1, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth1]) {
         bool addRow = true;
-        for (int k = 0; k < width; k++) {
-            if (!isFaceVisible(x + k, y, z + depth, BOTTOM, neighbors)) {
+        for (int k = 0; k < width1; k++) {
+            if (!isFaceVisible(x + k, y, z + depth1, direction, neighbors)) {
                 addRow = false;
                 break;
             }
         }
         if (!addRow)
             break;
-        depth++;
+        depth1++;
     }
+
+    // while (z + depth2 < CHUNK_DIM && isFaceVisible(x, y, z + depth2, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth2])
+    //     depth2++;
+
+    // while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
+    //     bool addRow = true;
+    //     for (int k = 0; k < depth2; k++) {
+    //         if (!isFaceVisible(x + width2, y, z + k, direction, neighbors)) {
+    //             addRow = false;
+    //             break;
+    //         }
+    //     }
+    //     if (!addRow)
+    //         break;
+    //     width2++;
+    // }
+
+    // if (width1 * depth1 >= width2 * depth2)
+    //     width = width1, depth = depth1;
+    // else
+    //     width = width2, depth = depth2;
+    width = width1;
+    depth = depth1;
 
     addBottomFace(y, x, z, x + width, z + depth, vertices, indices);
 
-    for (int dx = 0; dx < width; dx++) {
-        for (int dz = 0; dz < depth; dz++) {
-            mask[(x + dx) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + dz] |= filter;
+    for (char dx = 0; dx < width; dx++) {
+        for (char dz = 0; dz < depth; dz++) {
+            processed[(x + dx) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + dz] |= mask;
         }
     }
 }
 
 // WORKS
-void Chunk::processFaceZPositive(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
-    char filter = 0b00000001;
-    if ((mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, BACK, neighbors))
+void Chunk::processFaceZPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices, int* facesCount) {
+    DirectionMask mask = DirectionMask::MASK_ZPOS;
+    Direction direction = Direction::ZPOS;
+    if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & mask) || !isFaceVisible(x, y, z, direction, neighbors))
         return;
     
-    int width = 1;
-    int height = 1;
+    char width1 = 1, width2 = 1, width = 1;
+    char height1 = 1, height2 = 1, height = 1;
 
-    while (x + width < CHUNK_DIM && isFaceVisible(x + width, y, z, BACK, neighbors))
-        width++;
+    while (x + width1 < CHUNK_DIM && isFaceVisible(x + width1, y, z, direction, neighbors))
+        width1++;
 
-    while (y + height < CHUNK_DIM && isFaceVisible(x, y + height, z, BACK, neighbors) && !mask[x * CHUNK_DIM * CHUNK_DIM + (y + height) * CHUNK_DIM + z]) {
+    while (y + height1 < CHUNK_DIM && isFaceVisible(x, y + height1, z, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + (y + height1) * CHUNK_DIM + z]) {
         bool addRow = true;
-        for (int k = 0; k < width; k++) {
-            if (!isFaceVisible(x + k, y + height, z, BACK, neighbors)) {
+        for (char k = 0; k < width1; k++) {
+            if (!isFaceVisible(x + k, y + height1, z, direction, neighbors)) {
                 addRow = false;
                 break;
             }
         }
         if (!addRow)
             break;
-        height++;
+        height1++;
     }
+
+
+    // while (y + height2 < CHUNK_DIM && isFaceVisible(x, y + height2, z, direction, neighbors))
+    //     height2++;
+
+    // while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
+    //     bool addRow = true;
+    //     for (char k = 0; k < height2; k++) {
+    //         if (!isFaceVisible(x + width2, y + k, z, direction, neighbors)) {
+    //             addRow = false;
+    //             break;
+    //         }
+    //     }
+    //     if (!addRow)
+    //         break;
+    //     width2++;
+    // }
+
+    // if (width1 * height1 >= width2 * height2)
+    //     width = width1, height = height1;
+    // else
+    //     width = width2, height = height2;
+    width = width1;
+    height = height1;
+
+    addFrontFace(z, x, y, x + width1, y + height1, vertices, indices);
+
+    for (char dx = 0; dx < width; dx++) {
+        for (char dy = 0; dy < height; dy++) {
+            processed[(x + dx) * CHUNK_DIM * CHUNK_DIM + (y + dy) * CHUNK_DIM + z] |= mask;
+        }
+    }
+}
+
+
+// WORKS
+void Chunk::processFaceZNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
+    DirectionMask mask = DirectionMask::MASK_ZNEG;
+    Direction direction = Direction::ZNEG;
+    if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & mask) || !isFaceVisible(x, y, z, direction, neighbors))
+        return;
+    
+    char width1 = 1, width2 = 1, width = 1;
+    char height1 = 1, height2 = 1, height = 1;
+
+    while (x + width1 < CHUNK_DIM && isFaceVisible(x + width1, y, z, direction, neighbors))
+        width1++;
+
+    while (y + height1 < CHUNK_DIM && isFaceVisible(x, y + height1, z, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + (y + height1) * CHUNK_DIM + z]) {
+        bool addRow = true;
+        for (char k = 0; k < width1; k++) {
+            if (!isFaceVisible(x + k, y + height1, z, direction, neighbors)) {
+                addRow = false;
+                break;
+            }
+        }
+        if (!addRow)
+            break;
+        height1++;
+    }
+
+
+    // while (y + height2 < CHUNK_DIM && isFaceVisible(x, y + height2, z, direction, neighbors))
+    //     height2++;
+
+    // while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
+    //     bool addRow = true;
+    //     for (char k = 0; k < height2; k++) {
+    //         if (!isFaceVisible(x + width2, y + k, z, direction, neighbors)) {
+    //             addRow = false;
+    //             break;
+    //         }
+    //     }
+    //     if (!addRow)
+    //         break;
+    //     width2++;
+    // }
+
+    // if (width1 * height1 >= width2 * height2)
+    //     width = width1, height = height1;
+    // else
+    //     width = width2, height = height2;
+    width = width1;
+    height = height1;
 
     addBackFace(z, x, y, x + width, y + height, vertices, indices);
 
-    for (int dx = 0; dx < width; dx++) {
-        for (int dy = 0; dy < height; dy++) {
-            mask[(x + dx) * CHUNK_DIM * CHUNK_DIM + (y + dy) * CHUNK_DIM + z] |= filter;
-        }
-    }
-}
-
-
-// WORKS
-void Chunk::processFaceZNegative(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
-    char filter = 0b00000010;
-    if ((mask[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, FRONT, neighbors))
-        return;
-    
-    int width = 1;
-    int height = 1;
-
-    while (x + width < CHUNK_DIM && isFaceVisible(x + width, y, z, FRONT, neighbors))
-        width++;
-
-    while (y + height < CHUNK_DIM && isFaceVisible(x, y + height, z, FRONT, neighbors) && !mask[x * CHUNK_DIM * CHUNK_DIM + (y + height) * CHUNK_DIM + z]) {
-        bool addRow = true;
-        for (int k = 0; k < width; k++) {
-            if (!isFaceVisible(x + k, y + height, z, FRONT, neighbors)) {
-                addRow = false;
-                break;
-            }
-        }
-        if (!addRow)
-            break;
-        height++;
-    }
-
-    addFrontFace(z, x, y, x + width, y + height, vertices, indices);
-
-    for (int dx = 0; dx < width; dx++) {
-        for (int dy = 0; dy < height; dy++) {
-            mask[(x + dx) * CHUNK_DIM * CHUNK_DIM + (y + dy) * CHUNK_DIM + z] |= filter;
+    for (char dx = 0; dx < width; dx++) {
+        for (char dy = 0; dy < height; dy++) {
+            processed[(x + dx) * CHUNK_DIM * CHUNK_DIM + (y + dy) * CHUNK_DIM + z] |= mask;
         }
     }
 }
 
 
 
-void Chunk::greedyBuild(const std::vector<Chunk*> &neighbors) {
+void Chunk::greedyBuild(const std::vector<Chunk*> &neighbors, int *facesCount) {
     if (_empty) {
         _indicesCount = 0;
         return;
     }
-    char mask[CHUNK_DIM * CHUNK_DIM * CHUNK_DIM] = {0};
+    char processed[CHUNK_DIM * CHUNK_DIM * CHUNK_DIM] = {0};
     std::vector<PackedVertex> vertices;
     std::vector<GLuint> indices;
 
-    for (int x = 0; x < CHUNK_DIM; ++x) {
-        for (int y = 0; y < CHUNK_DIM; ++y) {
-            for (int z = 0; z < CHUNK_DIM; z++) {
+    for (char x = 0; x < CHUNK_DIM; ++x) {
+        for (char y = 0; y < CHUNK_DIM; ++y) {
+            for (char z = 0; z < CHUNK_DIM; z++) {
                 if (isVoxelTransparent(x, y, z))
                     continue;
 
                 // Traitement des faces pour chaque direction
-                processFaceXPositive(x, y, z, mask, neighbors, vertices, indices);
-                processFaceXNegative(x, y, z, mask, neighbors, vertices, indices);
+                processFaceXPositive(x, y, z, processed, neighbors, vertices, indices);
+                processFaceXNegative(x, y, z, processed, neighbors, vertices, indices);
 
-                processFaceYPositive(x, y, z, mask, neighbors, vertices, indices);
-                processFaceYNegative(x, y, z, mask, neighbors, vertices, indices);
+                processFaceYPositive(x, y, z, processed, neighbors, vertices, indices);
+                processFaceYNegative(x, y, z, processed, neighbors, vertices, indices);
                 
-                processFaceZPositive(x, y, z, mask, neighbors, vertices, indices);
-                processFaceZNegative(x, y, z, mask, neighbors, vertices, indices);
+                processFaceZPositive(x, y, z, processed, neighbors, vertices, indices, facesCount);
+                processFaceZNegative(x, y, z, processed, neighbors, vertices, indices);
             }
         }
     }
@@ -443,7 +513,7 @@ void Chunk::render(const Shader &shaderProgram) {
     glm::mat4 model = glm::translate(glm::mat4(1.0f), _position * (float)CHUNK_DIM);
     shaderProgram.setMat4("model", model);
     glBindVertexArray(_VAO);
-    glDrawElements(GL_TRIANGLES, _indicesCount, GL_UNSIGNED_INT, (void*)0);
+    glDrawElements(GL_TRIANGLES, (GLsizei)(_indicesCount), GL_UNSIGNED_INT, (void*)0);
 }
 
 
@@ -467,13 +537,13 @@ void Chunk::setPosition(const glm::vec3 &position) {
 
 
 // Utility Functions
-bool Chunk::isVoxelTransparent(int x, int y, int z) {
+bool Chunk::isVoxelTransparent(char x, char y, char z) {
     if (x < 0 || x >= CHUNK_DIM || y < 0 || y >= CHUNK_DIM || z < 0 || z >= CHUNK_DIM)
         return true;
     return Voxel::isTransparent(_voxels[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]);
 }
 
-bool Chunk::isVoxelTransparent(int x, int y, int z, const std::vector<Chunk*> &neighbors) {
+bool Chunk::isVoxelTransparent(char x, char y, char z, const std::vector<Chunk*> &neighbors) {
     if (!(x < 0 || x >= CHUNK_DIM || y < 0 || y >= CHUNK_DIM || z < 0 || z >= CHUNK_DIM))
         return Voxel::isTransparent(_voxels[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]);
 
@@ -501,6 +571,6 @@ bool Chunk::isVoxelTransparent(int x, int y, int z, const std::vector<Chunk*> &n
     return chunk->isVoxelTransparent(x, y, z);
 }
 
-long long mod(long long k, long long n) {
+char mod(char k, char n) {
     return ((k %= n) < 0) ? k+n : k;
 }

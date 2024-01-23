@@ -8,7 +8,7 @@ Camera::Camera() {
     _speed = 5.0f;
     _sensitivity = 0.1f;
     _zoom = 45.0f;
-    _aspectRatio = 4.0 / 3.0f;
+    _aspectRatio = 4.0f / 3.0f;
     _nearPlane = 0.1f;
     _farPlane = 10000.0f;
 
@@ -22,7 +22,7 @@ Camera::Camera(unsigned windowHeight, unsigned windowWidth) {
     _speed = 5.0f;
     _sensitivity = 1.0f;
     _zoom = 45.0f;
-    _aspectRatio = static_cast<float>(windowWidth) / windowHeight;
+    _aspectRatio = (float)(windowWidth / windowHeight);
     _nearPlane = 0.1f;
     _farPlane = 10000.0f;
 
@@ -37,7 +37,7 @@ Camera::Camera(glm::vec3 position, unsigned windowHeight, unsigned windowWidth) 
     _speed = 5.0f;
     _sensitivity = 0.1f;
     _zoom = 45.0f;
-    _aspectRatio = windowWidth / windowHeight;
+    _aspectRatio = (float)(windowWidth / windowHeight);
     _nearPlane = 0.1f;
     _farPlane = 10000.0f;
 
@@ -52,7 +52,7 @@ Camera::Camera(glm::vec3 position, float yaw, float pitch, float speed, float se
     _speed = speed;
     _sensitivity = sensitivity;
     _zoom = zoom;
-    _aspectRatio = 4.0 / 3.0f;
+    _aspectRatio = 4.0f / 3.0f;
     _nearPlane = 0.1f;
     _farPlane = 10000.0f;
 
@@ -67,7 +67,7 @@ Camera::Camera(glm::vec3 position, float yaw, float pitch, float speed, float se
     _speed = speed;
     _sensitivity = sensitivity;
     _zoom = zoom;
-    _aspectRatio = windowWidth / windowHeight;
+    _aspectRatio = (float)(windowWidth / windowHeight);
     _nearPlane = 0.1f;
     _farPlane = 10000.0f;
 

@@ -19,7 +19,7 @@ class Chunk {
 
         void render(const Shader &shaderProgram);
         void build(const std::vector<Chunk*> &neighbors);
-        void greedyBuild(const std::vector<Chunk*> &neighbors);
+        void greedyBuild(const std::vector<Chunk*> &neighbors, int *facesCount);
         void defineCave(TerrainGenerator &terrainGenerator);
         void defineVoxelData(TerrainGenerator &terrainGenerator);
 
@@ -36,22 +36,22 @@ class Chunk {
         glm::vec3 _position;
         bool _empty;
 
-        bool isVoxelTransparent(int x, int y, int z);
-        bool isVoxelTransparent(int x, int y, int z, const std::vector<Chunk*> &neighbors);
+        bool isVoxelTransparent(char x, char y, char z);
+        bool isVoxelTransparent(char x, char y, char z, const std::vector<Chunk*> &neighbors);
 
-        bool isFaceVisible(int x, int y, int z, FaceDirection direction);
-        bool isFaceVisible(int x, int y, int z, FaceDirection direction, const std::vector<Chunk*> &neighbors);
+        bool isFaceVisible(char x, char y, char z, Direction direction);
+        bool isFaceVisible(char x, char y, char z, Direction direction, const std::vector<Chunk*> &neighbors);
 
-        void processFaceXPositive(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
-        void processFaceXNegative(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
-        void processFaceYPositive(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
-        void processFaceYNegative(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
-        void processFaceZPositive(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
-        void processFaceZNegative(int x, int y, int z, char mask[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
+        void processFaceXPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
+        void processFaceXNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
+        void processFaceYPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
+        void processFaceYNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
+        void processFaceZPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices, int* facesCount);
+        void processFaceZNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
 
         void uploadMeshData(std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices);
 
-        char getFaceMask(int x, int y, int z, const std::vector<Chunk*> &neighbors);
+        char getFaceMask(char x, char y, char z, const std::vector<Chunk*> &neighbors);
 
         void generateBuffers();
         void deleteBuffers();
