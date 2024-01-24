@@ -220,9 +220,6 @@ int main(int argc, char **argv) {
     float waterLevel = ((float)(world.getHeight() - 1) * (float)CHUNK_DIM) / 2.0f + 0.5f;
     createOcean(waterVAO, waterVBO, waterEBO, waterLevel);
 
-    Texture texture("..\\..\\textures\\atlas.png");
-    texture.bind();
-
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CW);
