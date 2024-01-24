@@ -16,18 +16,23 @@ enum BuildMode : unsigned char {
 class World {
     public:
         World();
-        World(glm::vec3 *playerPosition);
+        World(glm::vec3 *playerPosition, int world_width, int world_height);
         ~World();
 
         void build(BuildMode mode);
         void render(const Shader &shaderProgram);
 
         Chunk* getChunk(int x, int y, int z);
+
+        int getHeight() const;
         
         int facesCount = 0;
     private:
         glm::vec3* _playerPosition;
         Chunk** _chunks;
+
+        int _width;
+        int _height;
 
         std::vector<Chunk*> getNeighboringChunks(int x, int y, int z);
 };

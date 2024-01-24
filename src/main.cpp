@@ -9,6 +9,7 @@
 
 #include <camera.h>
 #include <cube_mesh.h>
+#include <debug_color.h>
 #include <graphics/shader.h>
 #include <graphics/texture.h>
 
@@ -23,13 +24,15 @@ double lastY = WINDOW_HEIGHT / 2.0;
 bool firstMouse = true;
 bool xKeyPressed = false;
 bool wireframeMode = false;
+bool renderWater = true;
+bool wKeyPressed = false;
+
 
 bool compareVec3(const glm::vec3 &v1, const glm::vec3 &v2) {
     return (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z);
 }
 
 void processInput(GLFWwindow* window, Camera& cam, float deltaTime) {
-    // const glm::vec3 &firstCamPos = *(cam.getPosition());
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cam.moveForward(deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -43,8 +46,6 @@ void processInput(GLFWwindow* window, Camera& cam, float deltaTime) {
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         cam.moveUp(deltaTime);
     const glm::vec3 &secondCamPos = *(cam.getPosition());
-    // if (!(compareVec3(firstCamPos, secondCamPos)))
-    // std::cout << "Position: (" << secondCamPos.x << ", " << secondCamPos.y << ", " << secondCamPos.z << ")" << std::endl;
     
 
     bool xKeyDown = glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS;
@@ -56,6 +57,12 @@ void processInput(GLFWwindow* window, Camera& cam, float deltaTime) {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 	xKeyPressed = xKeyDown;
+
+    bool wKeyDown = glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS;
+	if (wKeyDown && !wKeyPressed) {
+		renderWater = !renderWater;
+	}
+	wKeyPressed = wKeyDown;
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose (window, true);
@@ -91,18 +98,89 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     camera->rotate(xoffset, yoffset);
 }
 
+void createOcean(GLuint &waterVAO, GLuint &waterVBO, GLuint &waterEBO, float waterLevel) {
+    GLfloat dim = 100000.0;
+    GLfloat hgt = waterLevel;
+    GLfloat vertices[] = {
+        -dim, hgt, -dim,// 0.0, 0.0,
+         dim, hgt, -dim,// 1.0, 0.0,
+         dim, hgt,  dim,// 1.0, 1.0,
+        -dim, hgt,  dim,// 0.0, 1.0,
+    };
+
+    GLuint indices[] = {
+        0, 1, 2,
+        2, 3, 0,
+    };
+
+    glGenVertexArrays(1, &waterVAO);
+    glGenBuffers(1, &waterVBO);
+    glGenBuffers(1, &waterEBO);
+
+    glBindVertexArray(waterVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, waterVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, waterEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindVertexArray(0);
+}
+
 
 int main(int argc, char **argv) {
-    BuildMode buildMode = GREEDY;
-    if (argc >= 2 && strcmp(argv[1], "CLASSIC") == 0)
-        buildMode = CLASSIC;
+    BuildMode buildMode = GREEDY;             // Default mode
+    int world_width = -WORLD_WIDTH;           // Default value, indicates not set
+    int world_height = -WORLD_HEIGHT;         // Default value, indicates not set
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+
+        // Check for mode argument
+        if (arg == "GREEDY") {
+            buildMode = GREEDY;
+        } else if (arg == "CLASSIC") {
+            buildMode = CLASSIC;
+        } else {
+            // Check for numeric arguments
+            try {
+                int number = std::stoi(arg);
+                if (world_width == -WORLD_WIDTH) {
+                    // First number found, set world_width
+                    number = abs(number);
+                    world_width = number;
+                } else if (world_height == -WORLD_HEIGHT) {
+                    // Second number found, set world_height
+                    number = abs(number);
+                    world_height = number;
+                }
+            } catch (std::invalid_argument const &e) {
+                std::cerr << Color::RED << "Invalid number: " << arg << Color::RESET << std::endl;
+            } catch (std::out_of_range const &e) {
+                std::cerr << Color::RED << "Number out of range: " << arg << Color::RESET << std::endl;
+            }
+        }
+    }
+
+    // Output for verification
+    std::cout << Color::YELLOW << "Build mode: " << (buildMode == GREEDY ? Color::GREEN + "GREEDY" : Color::RED + "CLASSIC") << Color::RESET << std::endl;
+    std::cout << Color::YELLOW << "World width: " << (world_width != -WORLD_WIDTH ? Color::BLUE + std::to_string(world_width) : "Not set") << Color::RESET << std::endl;
+    std::cout << Color::YELLOW << "World height: " << (world_height != -WORLD_HEIGHT ? Color::BLUE + std::to_string(world_height) : "Not set") << Color::RESET << std::endl;
+
+    world_width = abs(world_width);
+    world_height = abs(world_height);
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Meinkraft - 0 FPS", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "OM3D - 0 FPS", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -117,8 +195,11 @@ int main(int argc, char **argv) {
 
     glEnable(GL_DEPTH_TEST);
 
-    // Build and compile our shader program
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     Shader shaderProgram("..\\..\\shaders\\mesh.vtx.glsl", "..\\..\\shaders\\mesh.frg.glsl");
+    Shader waterShader("..\\..\\shaders\\water.vtx.glsl", "..\\..\\shaders\\water.frg.glsl");
 
     int height, width;
     glfwGetWindowSize(window, &width, &height);
@@ -131,16 +212,20 @@ int main(int argc, char **argv) {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    World world(cam.getPosition());
+    World world(cam.getPosition(), world_width, world_height);
     world.build(buildMode);
-    std::cout << "Faces count: " << world.facesCount << std::endl;
+    std::cout << Color::YELLOW << "Face count: " << Color::BLUE << world.facesCount << Color::RESET << std::endl;
+
+    GLuint waterVAO, waterVBO, waterEBO;
+    float waterLevel = ((float)(world.getHeight() - 1) * (float)CHUNK_DIM) / 2.0f + 0.5f;
+    createOcean(waterVAO, waterVBO, waterEBO, waterLevel);
 
     Texture texture("..\\..\\textures\\atlas.png");
     texture.bind();
 
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
-    // glFrontFace(GL_CW);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CW);
 
     glClearColor(0.4f, 0.4f, 0.8f, 1.0f);
 
@@ -154,15 +239,13 @@ int main(int argc, char **argv) {
         double deltaTime = currentFrameTime - lastFrameTime;
         lastFrameTime = currentFrameTime;
 
-        // Compteur de FPS
         fpsCounter++;
-        if (currentFrameTime - lastFPSTime >= 1.0) { // Mise à jour chaque seconde
+        if (currentFrameTime - lastFPSTime >= 1.0) {
             fps = fpsCounter;
             fpsCounter = 0;
             lastFPSTime = currentFrameTime;
 
-            // Afficher les FPS (par exemple, dans le titre de la fenêtre)
-            std::string windowTitle = "Meinkraft - " + std::to_string(fps) + " FPS";
+            std::string windowTitle = "OM3D - " + std::to_string(fps) + " FPS";
             glfwSetWindowTitle(window, windowTitle.c_str());
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -172,7 +255,16 @@ int main(int argc, char **argv) {
         shaderProgram.use();
         shaderProgram.setMat4("view", cam.getViewMatrix());
         shaderProgram.setMat4("projection", cam.getProjectionMatrix());
+        shaderProgram.setBool("underWater", (*cam.getPosition()).y < waterLevel && renderWater);
         world.render(shaderProgram);
+
+        if (renderWater) {
+            waterShader.use();
+            waterShader.setMat4("view", cam.getViewMatrix());
+            waterShader.setMat4("projection", cam.getProjectionMatrix());
+            glBindVertexArray(waterVAO);
+            glDrawElements(GL_TRIANGLES, (GLsizei)(6), GL_UNSIGNED_INT, (void*)0);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

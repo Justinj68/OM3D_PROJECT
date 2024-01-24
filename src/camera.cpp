@@ -22,7 +22,7 @@ Camera::Camera(unsigned windowHeight, unsigned windowWidth) {
     _speed = 5.0f;
     _sensitivity = 1.0f;
     _zoom = 45.0f;
-    _aspectRatio = (float)(windowWidth / windowHeight);
+    _aspectRatio = ((float)windowWidth / (float)windowHeight);
     _nearPlane = 0.1f;
     _farPlane = 10000.0f;
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Meinkraft)
+project(OM3DM)
 
 # Specify the C++ version
 set(CMAKE_CXX_STANDARD 17)
@@ -34,10 +34,10 @@ add_library(glad "${GLAD_DIR}/glad.c")
 file(GLOB_RECURSE SOURCES "src/*.cpp" "${STB_DIR}/*.cpp")
 
 # Add the executable
-add_executable(Meinkraft ${SOURCES})
+add_executable(OM3DM ${SOURCES})
 
 # Find the GLFW library
 find_library(GLFW_LIBRARY NAMES glfw3 glfw PATHS "${GLFW_DIR}/lib-vc2022")
 
 # Link the libraries to your executable
-target_link_libraries(Meinkraft ${GLFW_LIBRARY} glad)
+target_link_libraries(OM3DM ${GLFW_LIBRARY} glad)

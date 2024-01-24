@@ -1,5 +1,6 @@
 #include <chunk.h>
 
+#include <bitset>
 #include <math.h>
 
 char mod(char k, char n);
@@ -121,7 +122,7 @@ void Chunk::destroy() {
 
 
 // Mesh and Buffer Management Functions
-void Chunk::build(const std::vector<Chunk*> &neighbors) {
+void Chunk::build(const std::vector<Chunk*> &neighbors, int *facesCount) {
     if (_empty) {
         _indicesCount = 0;
         return;
@@ -133,18 +134,30 @@ void Chunk::build(const std::vector<Chunk*> &neighbors) {
             for (char z = 0; z < CHUNK_DIM; z++) {
                 if (isVoxelTransparent(x, y, z))
                     continue;
-                if (isVoxelTransparent(x, y - 1, z, neighbors))
+                if (isVoxelTransparent(x, y - 1, z, neighbors)) {
                     addBottomFace(x, y, z, vertices, indices);
-                if (isVoxelTransparent(x, y + 1, z, neighbors))
+                    facesCount[0]++;
+                }
+                if (isVoxelTransparent(x, y + 1, z, neighbors)) {
                     addTopFace(x, y, z, vertices, indices);
-                if (isVoxelTransparent(x - 1, y, z, neighbors))
+                    facesCount[0]++;
+                }
+                if (isVoxelTransparent(x - 1, y, z, neighbors)) {
                     addLeftFace(x, y, z, vertices, indices);
-                if (isVoxelTransparent(x + 1, y, z, neighbors))
+                    facesCount[0]++;
+                }
+                if (isVoxelTransparent(x + 1, y, z, neighbors)) {
                     addRightFace(x, y, z, vertices, indices);
-                if (isVoxelTransparent(x, y, z + 1, neighbors))
+                    facesCount[0]++;
+                }
+                if (isVoxelTransparent(x, y, z + 1, neighbors)) {
                     addFrontFace(x, y, z, vertices, indices);
-                if (isVoxelTransparent(x, y, z - 1, neighbors))
+                    facesCount[0]++;
+                }
+                if (isVoxelTransparent(x, y, z - 1, neighbors)) {
                     addBackFace(x, y, z, vertices, indices);
+                    facesCount[0]++;
+                }
             }
         }
     }
@@ -153,7 +166,7 @@ void Chunk::build(const std::vector<Chunk*> &neighbors) {
 }
 
 // WORKS
-void Chunk::processFaceXPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
+void Chunk::processFaceXPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices, int* facesCount) {
     char filter = DirectionMask::MASK_XPOS;
     if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, Direction::XPOS, neighbors))
         return;
@@ -178,6 +191,7 @@ void Chunk::processFaceXPositive(char x, char y, char z, char processed[], const
     }
 
     addRightFace(x, y, z, y + height, z + depth, vertices, indices);
+    facesCount[0]++;
 
     for (char dz = 0; dz < depth; dz++) {
         for (char dy = 0; dy < height; dy++) {
@@ -187,7 +201,7 @@ void Chunk::processFaceXPositive(char x, char y, char z, char processed[], const
 }
 
 // WORKS
-void Chunk::processFaceXNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
+void Chunk::processFaceXNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices, int* facesCount) {
     char filter = DirectionMask::MASK_XNEG;
     if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & filter) || !isFaceVisible(x, y, z, Direction::XNEG, neighbors))
         return;
@@ -212,6 +226,8 @@ void Chunk::processFaceXNegative(char x, char y, char z, char processed[], const
     }
 
     addLeftFace(x, y, z, y + height, z + depth, vertices, indices);
+    facesCount[0]++;
+    
 
     for (char dz = 0; dz < depth; dz++) {
         for (char dy = 0; dy < height; dy++) {
@@ -221,12 +237,10 @@ void Chunk::processFaceXNegative(char x, char y, char z, char processed[], const
 }
 
 
-void Chunk::processFaceYPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
-    DirectionMask mask = DirectionMask::MASK_YPOS;
-    Direction direction = Direction::YPOS;
+void Chunk::processFaceY(char x, char y, char z, char processed[], const std::vector<Chunk*>& neighbors, std::vector<PackedVertex>& vertices, std::vector<GLuint>& indices, int* facesCount, DirectionMask mask, Direction direction) {
     if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & mask) || !isFaceVisible(x, y, z, direction, neighbors))
         return;
-    
+
     char width1 = 1, width2 = 1, width = 1;
     char depth1 = 1, depth2 = 1, depth = 1;
 
@@ -246,30 +260,33 @@ void Chunk::processFaceYPositive(char x, char y, char z, char processed[], const
         depth1++;
     }
 
-    // while (z + depth2 < CHUNK_DIM && isFaceVisible(x, y, z + depth2, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth2])
-    //     depth2++;
+    while (z + depth2 < CHUNK_DIM && isFaceVisible(x, y, z + depth2, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth2])
+        depth2++;
 
-    // while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
-    //     bool addRow = true;
-    //     for (int k = 0; k < depth2; k++) {
-    //         if (!isFaceVisible(x + width2, y, z + k, direction, neighbors)) {
-    //             addRow = false;
-    //             break;
-    //         }
-    //     }
-    //     if (!addRow)
-    //         break;
-    //     width2++;
-    // }
+    while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
+        bool addRow = true;
+        for (int k = 0; k < depth2; k++) {
+            if (!isFaceVisible(x + width2, y, z + k, direction, neighbors)) {
+                addRow = false;
+                break;
+            }
+        }
+        if (!addRow)
+            break;
+        width2++;
+    }
 
-    // if (width1 * depth1 >= width2 * depth2)
-    //     width = width1, depth = depth1;
-    // else
-    //     width = width2, depth = depth2;
+    if (width1 * depth1 >= width2 * depth2)
+        width = width1, depth = depth1;
+    else
+        width = width2, depth = depth2;
 
-    width = width1;
-    depth = depth1;
-    addTopFace(y, x, z, x + width, z + depth, vertices, indices);
+    if (direction == Direction::YPOS) {
+        addTopFace(y, x, z, x + width, z + depth, vertices, indices);
+    } else if (direction == Direction::YNEG) {
+        addBottomFace(y, x, z, x + width, z + depth, vertices, indices);
+    }
+    facesCount[0]++;
 
     for (char dx = 0; dx < width; dx++) {
         for (char dz = 0; dz < depth; dz++) {
@@ -277,61 +294,12 @@ void Chunk::processFaceYPositive(char x, char y, char z, char processed[], const
         }
     }
 }
-void Chunk::processFaceYNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
-    DirectionMask mask = DirectionMask::MASK_YNEG;
-    Direction direction = Direction::YNEG;
-    if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & mask) || !isFaceVisible(x, y, z, direction, neighbors))
-        return;
-    
-    char width1 = 1, width2 = 1, width = 1;
-    char depth1 = 1, depth2 = 1, depth = 1;
 
-    while (x + width1 < CHUNK_DIM && isFaceVisible(x + width1, y, z, direction, neighbors) && !processed[(x + width1) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z])
-        width1++;
-
-    while (z + depth1 < CHUNK_DIM && isFaceVisible(x, y, z + depth1, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth1]) {
-        bool addRow = true;
-        for (int k = 0; k < width1; k++) {
-            if (!isFaceVisible(x + k, y, z + depth1, direction, neighbors)) {
-                addRow = false;
-                break;
-            }
-        }
-        if (!addRow)
-            break;
-        depth1++;
-    }
-
-    // while (z + depth2 < CHUNK_DIM && isFaceVisible(x, y, z + depth2, direction, neighbors) && !processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + depth2])
-    //     depth2++;
-
-    // while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
-    //     bool addRow = true;
-    //     for (int k = 0; k < depth2; k++) {
-    //         if (!isFaceVisible(x + width2, y, z + k, direction, neighbors)) {
-    //             addRow = false;
-    //             break;
-    //         }
-    //     }
-    //     if (!addRow)
-    //         break;
-    //     width2++;
-    // }
-
-    // if (width1 * depth1 >= width2 * depth2)
-    //     width = width1, depth = depth1;
-    // else
-    //     width = width2, depth = depth2;
-    width = width1;
-    depth = depth1;
-
-    addBottomFace(y, x, z, x + width, z + depth, vertices, indices);
-
-    for (char dx = 0; dx < width; dx++) {
-        for (char dz = 0; dz < depth; dz++) {
-            processed[(x + dx) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z + dz] |= mask;
-        }
-    }
+void Chunk::processFaceYPositive(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices, int* facesCount) {
+    processFaceY(x, y, z, processed, neighbors, vertices, indices, facesCount, DirectionMask::MASK_YPOS, Direction::YPOS);
+}
+void Chunk::processFaceYNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices, int* facesCount) {
+    processFaceY(x, y, z, processed, neighbors, vertices, indices, facesCount, DirectionMask::MASK_YNEG, Direction::YNEG);
 }
 
 // WORKS
@@ -361,30 +329,33 @@ void Chunk::processFaceZPositive(char x, char y, char z, char processed[], const
     }
 
 
-    // while (y + height2 < CHUNK_DIM && isFaceVisible(x, y + height2, z, direction, neighbors))
-    //     height2++;
+    while (y + height2 < CHUNK_DIM && isFaceVisible(x, y + height2, z, direction, neighbors))
+        height2++;
 
-    // while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
-    //     bool addRow = true;
-    //     for (char k = 0; k < height2; k++) {
-    //         if (!isFaceVisible(x + width2, y + k, z, direction, neighbors)) {
-    //             addRow = false;
-    //             break;
-    //         }
-    //     }
-    //     if (!addRow)
-    //         break;
-    //     width2++;
-    // }
+    while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
+        bool addRow = true;
+        for (char k = 0; k < height2; k++) {
+            if (!isFaceVisible(x + width2, y + k, z, direction, neighbors)) {
+                addRow = false;
+                break;
+            }
+        }
+        if (!addRow)
+            break;
+        width2++;
+    }
 
-    // if (width1 * height1 >= width2 * height2)
-    //     width = width1, height = height1;
-    // else
-    //     width = width2, height = height2;
+    if (width1 * height1 >= width2 * height2)
+        width = width1, height = height1;
+    else
+        width = width2, height = height2;
+
     width = width1;
     height = height1;
 
     addFrontFace(z, x, y, x + width1, y + height1, vertices, indices);
+    facesCount[0]++;
+
 
     for (char dx = 0; dx < width; dx++) {
         for (char dy = 0; dy < height; dy++) {
@@ -395,7 +366,7 @@ void Chunk::processFaceZPositive(char x, char y, char z, char processed[], const
 
 
 // WORKS
-void Chunk::processFaceZNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices) {
+void Chunk::processFaceZNegative(char x, char y, char z, char processed[], const std::vector<Chunk*> &neighbors, std::vector<PackedVertex> &vertices, std::vector<GLuint> &indices, int* facesCount) {
     DirectionMask mask = DirectionMask::MASK_ZNEG;
     Direction direction = Direction::ZNEG;
     if ((processed[x * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z] & mask) || !isFaceVisible(x, y, z, direction, neighbors))
@@ -421,30 +392,30 @@ void Chunk::processFaceZNegative(char x, char y, char z, char processed[], const
     }
 
 
-    // while (y + height2 < CHUNK_DIM && isFaceVisible(x, y + height2, z, direction, neighbors))
-    //     height2++;
+    while (y + height2 < CHUNK_DIM && isFaceVisible(x, y + height2, z, direction, neighbors))
+        height2++;
 
-    // while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
-    //     bool addRow = true;
-    //     for (char k = 0; k < height2; k++) {
-    //         if (!isFaceVisible(x + width2, y + k, z, direction, neighbors)) {
-    //             addRow = false;
-    //             break;
-    //         }
-    //     }
-    //     if (!addRow)
-    //         break;
-    //     width2++;
-    // }
+    while (x + width2 < CHUNK_DIM && isFaceVisible(x + width2, y, z, direction, neighbors) && !processed[(x + width2) * CHUNK_DIM * CHUNK_DIM + y * CHUNK_DIM + z]) {
+        bool addRow = true;
+        for (char k = 0; k < height2; k++) {
+            if (!isFaceVisible(x + width2, y + k, z, direction, neighbors)) {
+                addRow = false;
+                break;
+            }
+        }
+        if (!addRow)
+            break;
+        width2++;
+    }
 
-    // if (width1 * height1 >= width2 * height2)
-    //     width = width1, height = height1;
-    // else
-    //     width = width2, height = height2;
-    width = width1;
-    height = height1;
+    if (width1 * height1 >= width2 * height2)
+        width = width1, height = height1;
+    else
+        width = width2, height = height2;
 
     addBackFace(z, x, y, x + width, y + height, vertices, indices);
+    facesCount[0]++;
+
 
     for (char dx = 0; dx < width; dx++) {
         for (char dy = 0; dy < height; dy++) {
@@ -471,14 +442,14 @@ void Chunk::greedyBuild(const std::vector<Chunk*> &neighbors, int *facesCount) {
                     continue;
 
                 // Traitement des faces pour chaque direction
-                processFaceXPositive(x, y, z, processed, neighbors, vertices, indices);
-                processFaceXNegative(x, y, z, processed, neighbors, vertices, indices);
+                processFaceXPositive(x, y, z, processed, neighbors, vertices, indices, facesCount);
+                processFaceXNegative(x, y, z, processed, neighbors, vertices, indices, facesCount);
 
-                processFaceYPositive(x, y, z, processed, neighbors, vertices, indices);
-                processFaceYNegative(x, y, z, processed, neighbors, vertices, indices);
-                
+                processFaceYPositive(x, y, z, processed, neighbors, vertices, indices, facesCount);
+                processFaceYNegative(x, y, z, processed, neighbors, vertices, indices, facesCount);
+
                 processFaceZPositive(x, y, z, processed, neighbors, vertices, indices, facesCount);
-                processFaceZNegative(x, y, z, processed, neighbors, vertices, indices);
+                processFaceZNegative(x, y, z, processed, neighbors, vertices, indices, facesCount);
             }
         }
     }
