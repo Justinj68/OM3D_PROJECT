@@ -9,6 +9,13 @@
 - **Culling de Chunks** : Les chunks situés au-delà d'une certaine distance ne sont pas rendus, améliorant les performances sans sacrifier la qualité visuelle.
 - **Backface culling** : Non-rendu des faces arrières.
 
+## Prérequis
+
+Avant de compiler et d'exécuter le projet, assurez-vous que les outils suivants sont installés sur votre système Windows :
+
+- **CMake** : Un système de construction multiplateforme nécessaire pour générer les fichiers de projet à partir des scripts de construction.
+- **Microsoft Visual C++ (MSVC) 2022** : Le compilateur recommandé pour compiler le projet sous Windows.
+
 ## Options de Ligne de Commande
 
 Le mode de construction et les dimensions du monde peuvent être personnalisés via des arguments de ligne de commande.  
@@ -83,3 +90,48 @@ Pour commencer à utiliser Voxel Engine, suivre ces étapes :
     cd Debug
     .\OM3DM.exe
     ```
+
+## Quelques statistiques 
+
+```
+Build mode: GREEDY
+World width: 100
+World height: 10
+Defining chunk data...
+Chunk data definition completed:
+        Total time: 12m 53.8957s
+        Avg. time/chunk: 0m 0.00773896s
+Building meshes...
+Mesh building completed:
+        Total time: 4m 24.6394s
+        Avg. time/chunk: 0m 0.00264639s
+Face count: 27410301
+```
+```
+Build mode: GREEDY
+World width: Not set
+World height: Not set
+Defining chunk data...
+Chunk data definition completed:
+        Total time: 0m 6.98893s
+        Avg. time/chunk: 0m 0.00698893s
+Building meshes...
+Mesh building completed:
+        Total time: 0m 2.32904s
+        Avg. time/chunk: 0m 0.00232904s
+Face count: 235914
+```
+```
+Build mode: CLASSIC
+World width: Not set
+World height: Not set
+Defining chunk data...
+Chunk data definition completed:
+        Total time: 0m 7.06783s
+        Avg. time/chunk: 0m 0.00706783s
+Building meshes...
+Mesh building completed:
+        Total time: 0m 1.28826s
+        Avg. time/chunk: 0m 0.00128826s
+Face count: 672414
+```
