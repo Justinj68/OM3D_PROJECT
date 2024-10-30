@@ -1,97 +1,97 @@
 # OM3D PROJECT
 
-## Fonctionnalités
+## Features
 
-- **Environnement 3D cubique** : Monde composé de cubes, généré à l'aide de bruit de Perlin pour un paysage naturel et réaliste avec des grottes.
-- **Système de Chunks** : Le monde est divisé en chunks de 32x32x32 voxels pour optimiser le rendu et la gestion de la mémoire.
-- **Greedy Meshing** : Optimisation du rendu par la fusion des faces adjacentes entre cubes, réduisant considérablement le nombre de triangles rendus.
-- **Eau Transparente** : Rendu de l'eau avec transparence.
-- **Culling de Chunks** : Les chunks situés au-delà d'une certaine distance ne sont pas rendus, améliorant les performances sans sacrifier la qualité visuelle.
-- **Backface culling** : Non-rendu des faces arrières.
+- **Cubical 3D Environment**: A world made up of cubes, generated using Perlin noise to create a natural, realistic landscape with caves.
+- **Chunk System**: The world is divided into 32x32x32 voxel chunks to optimize rendering and memory management.
+- **Greedy Meshing**: Rendering optimization by merging adjacent cube faces, significantly reducing the number of rendered triangles.
+- **Transparent Water**: Water rendering with transparency.
+- **Chunk Culling**: Chunks beyond a certain distance are not rendered, enhancing performance without sacrificing visual quality.
+- **Backface Culling**: Non-rendering of back faces.
 
-## Prérequis
+## Prerequisites
 
-Avant de compiler et d'exécuter le projet, assurez-vous que les outils suivants sont installés sur votre système Windows :
+Before compiling and running the project, ensure that the following tools are installed on your Windows system:
 
-- **CMake** : Un système de construction multiplateforme nécessaire pour générer les fichiers de projet à partir des scripts de construction.
-- **Microsoft Visual C++ (MSVC) 2022** : Le compilateur recommandé pour compiler le projet sous Windows.
+- **CMake**: A cross-platform build system necessary for generating project files from build scripts.
+- **Microsoft Visual C++ (MSVC) 2022**: The recommended compiler for compiling the project on Windows.
 
-## Options de Ligne de Commande
+## Command Line Options
 
-Le mode de construction et les dimensions du monde peuvent être personnalisés via des arguments de ligne de commande.  
-Vous pouvez choisir entre différents modes de construction et définir la largeur et la hauteur du monde au démarrage.
+The build mode and world dimensions can be customized through command line arguments.  
+You can choose between different build modes and set the width and height of the world at startup.
 
-### Mode de Construction
-Sélectionnez le mode de construction pour optimiser le rendu des voxels :
-- `GREEDY` : Utilise le 'Greedy Meshing', qui fusionne les faces adjacentes pour réduire le nombre de polygones rendus.
-- `CLASSIC` : Utilise le mode classique de rendu où chaque voxel est traité individuellement.
+### Build Mode
+Select the build mode to optimize voxel rendering:
+- `GREEDY`: Uses 'Greedy Meshing', which merges adjacent faces to reduce the number of rendered polygons.
+- `CLASSIC`: Uses the classic rendering mode where each voxel is processed individually.
 
-Ajoutez `GREEDY` ou `CLASSIC` à vos arguments de ligne de commande pour définir le mode.
+Add `GREEDY` or `CLASSIC` to your command line arguments to set the mode.
 
-### Dimensions du Monde
-Vous pouvez spécifier la largeur et la hauteur du monde en ajoutant des valeurs numériques après le mode de construction. Le programme assignera la première valeur numérique à la largeur et la deuxième à la hauteur.
+### World Dimensions
+You can specify the width and height of the world by adding numeric values after the build mode. The program will assign the first numeric value to the width and the second to the height.
 
-**Syntaxe** :
+**Syntax**:
 ```sh
-./OM3DM [MODE] [LARGEUR] [HAUTEUR]
+./OM3DM [MODE] [WIDTH] [HEIGHT]
 ```
 
-**Exemple** :
-Pour lancer l'application en mode `GREEDY` avec un monde de dimensions 20x10 chunks, entrer :
+**Example** :
+To launch the application in `GREEDY` mode with a world size of 20x10 chunks, enter:
 ```sh
 ./OM3DM GREEDY 20 10
 ```
 
-Les valeurs numériques sont interprétées comme des valeurs absolues.  
-Si une entrée non valide est détectée, un message d'erreur sera affiché dans le terminal.
+The numeric values are interpreted as absolute values.
+If an invalid input is detected, an error message will be displayed in the terminal.
 
-Par défaut, les paramètres seront les suivants :
-- Build mode : `GREEDY`
-- World width : 10
-- World height : 10
+By default, the parameters will be as follows:
+- Build mode: `GREEDY`
+- World width: 10
+- World height: 10
 
-### Gestion des Erreurs
-En cas de saisie d'un nombre invalide ou hors limites, le programme informera l'utilisateur via un message d'erreur en rouge dans le terminal, indiquant le problème avec l'argument fourni.
+### Error Handling
+In case of entering an invalid or out-of-bounds number, the program will inform the user through a red error message in the terminal, indicating the problem with the provided argument.
 
 
-## Commandes
+## Commands
 
-Naviguez dans le monde voxelisé avec ces touches (AZERTY) :
+Navigate through the voxelized world using these keys (AZERTY):
 
-| Touche | Action |
-| ------ | ------ |
-| Z      | Avancer |
-| S      | Reculer |
-| Q      | Aller à gauche |
-| D      | Aller à droite |
-| Espace | Monter |
-| A      | Descendre |
-| X      | Toggle entre ligne et polygone plein |
-| W      | Activer/désactiver le rendu de l'eau |
-| Echap  | Quitter le programme |
+| Key     | Action                              |
+| ------- | ----------------------------------- |
+| Z       | Move forward                        |
+| S       | Move backward                       |
+| Q       | Move left                           |
+| D       | Move right                          |
+| Space   | Ascend                              |
+| A       | Descend                             |
+| X       | Toggle between wireframe and solid polygon |
+| W       | Enable/disable water rendering      |
+| Escape  | Exit the program                    |
 
-## Installation, compilation et exécution
+## Installation, Compilation, and Execution
 
-Pour commencer à utiliser Voxel Engine, suivre ces étapes :
+To start using Voxel Engine, follow these steps:
 
-1. **Extraire le dossier OM3D_PROJECT du zip ou cloner le dépôt** :
+1. **Extract the OM3D_PROJECT folder from the zip or clone the repository**:
     ```sh
     git clone git@github.com:Justinj68/OM3D_PROJECT.git
     ```
-2. **Compiler le projet** :
+2. **Compile the project**:
     ```sh
     mkdir build
     cmake -B build
     cd build
     cmake --build .
     ```
-3. **Exécuter le programme** :
+3. **Run the program**:
     ```sh
     cd Debug
     .\OM3DM.exe
     ```
 
-## Quelques statistiques 
+## Some Statistics
 
 ```
 Build mode: GREEDY
